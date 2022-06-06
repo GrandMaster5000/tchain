@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	nt "./network"
+	nt "tchain/network"
 )
 
 const (
