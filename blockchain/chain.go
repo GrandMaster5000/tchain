@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"os"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func NewChain(filename, receiver string) error {
@@ -77,7 +79,10 @@ func (chain *BlockChain) Balance(address string, size uint64) uint64 {
 func (chain *BlockChain) LastHash() []byte {
 	var hash string
 	row := chain.DB.QueryRow("SELECT Hash FROM BlockChain ORDER BY Id DESC")
-	row.Scan(&hash)
+	err := row.Scan(&hash)
+	if err != nil {
+		return nil
+	}
 	return Base64Decode(hash)
 }
 

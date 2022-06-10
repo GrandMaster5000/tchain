@@ -24,7 +24,7 @@ func GeneratePrivate(bits uint) *rsa.PrivateKey {
 }
 
 func GenerateRandomBytes(max uint) []byte {
-	var slice = make([]byte, max)
+	var slice []byte = make([]byte, max)
 	_, err := rand.Read(slice)
 	if err != nil {
 		return nil
@@ -38,25 +38,25 @@ func HashSum(data []byte) []byte {
 }
 
 func Sign(priv *rsa.PrivateKey, data []byte) []byte {
-	signdata, err := rsa.SignPSS(rand.Reader, priv, crypto.SHA256, data, nil)
+	signature, err := rsa.SignPSS(rand.Reader, priv, crypto.SHA256, data, nil)
 	if err != nil {
 		return nil
 	}
-	return signdata
+	return signature
 }
 
 func Verify(pub *rsa.PublicKey, data, sign []byte) error {
 	return rsa.VerifyPSS(pub, crypto.SHA256, data, sign, nil)
 }
 
-func ProofOfWork(blockHash []byte, diff uint8, ch chan bool) uint64 {
+func ProofOfWork(blockHash []byte, difficulty uint8, ch chan bool) uint64 {
 	var (
 		Target  = big.NewInt(1)
 		intHash = big.NewInt(1)
 		nonce   = uint64(mrand.Intn(math.MaxUint32))
 		hash    []byte
 	)
-	Target.Lsh(Target, 256-uint(diff))
+	Target.Lsh(Target, 256-uint(difficulty))
 	for nonce < math.MaxUint64 {
 		select {
 		case <-ch:
@@ -82,10 +82,14 @@ func ProofOfWork(blockHash []byte, diff uint8, ch chan bool) uint64 {
 				}
 				return nonce
 			}
+			nonce++
 		}
-		nonce++
 	}
 	return nonce
+}
+
+func Base64Encode(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
 }
 
 func Base64Decode(data string) []byte {
@@ -94,10 +98,6 @@ func Base64Decode(data string) []byte {
 		return nil
 	}
 	return result
-}
-
-func Base64Encode(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
 }
 
 func ToBytes(num uint64) []byte {
@@ -126,9 +126,9 @@ func StringPrivate(priv *rsa.PrivateKey) string {
 }
 
 func ParsePrivate(privData string) *rsa.PrivateKey {
-	priv, err := x509.ParsePKCS1PrivateKey(Base64Decode(privData))
+	pub, err := x509.ParsePKCS1PrivateKey(Base64Decode(privData))
 	if err != nil {
 		return nil
 	}
-	return priv
+	return pub
 }
